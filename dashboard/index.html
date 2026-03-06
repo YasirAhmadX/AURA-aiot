@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Home - Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+      animation: float 20s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(30px, -30px) rotate(120deg); }
+      66% { transform: translate(-20px, 20px) rotate(240deg); }
+    }
+    .login-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 450px;
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+    .login-header h1 {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+    .login-header h1 i {
+      animation: pulse 2s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .login-header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+    }
+    #loginForm {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 40px 35px;
+      border-radius: 20px;
+      box-shadow: 
+        0 20px 60px rgba(0,0,0,0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    #loginForm:hover {
+      transform: translateY(-5px);
+      box-shadow: 
+        0 25px 70px rgba(0,0,0,0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+    .input-group {
+      position: relative;
+      margin-bottom: 25px;
+    }
+    .input-group i {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+      font-size: 1.1rem;
+      transition: color 0.3s ease;
+    }
+    #loginForm input {
+      width: 100%;
+      padding: 15px 15px 15px 50px;
+      font-size: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+    #loginForm input:focus {
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    #loginForm input:focus + i,
+    .input-group:has(input:focus) i {
+      color: #667eea;
+    }
+    #loginBtn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      position: relative;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    #loginBtn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    #loginBtn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    #loginBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    #loginBtn:active {
+      transform: translateY(0);
+    }
+    #loginBtn span {
+      position: relative;
+      z-index: 1;
+    }
+    #errorMessage {
+      color: #e74c3c;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      padding: 12px;
+      background: rgba(231, 76, 60, 0.1);
+      border-radius: 8px;
+      border-left: 4px solid #e74c3c;
+      display: none;
+      animation: shake 0.5s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    .footer {
+      text-align: center;
+      color: white;
+      margin-top: 30px;
+      opacity: 0.8;
+      font-size: 0.9rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+    }
+    @media (max-width: 500px) {
+      .login-header h1 {
+        font-size: 2rem;
+      }
+      #loginForm {
+        padding: 30px 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>
+        <i class="fas fa-home"></i>
+        Smart Home
+      </h1>
+      <p>Welcome back! Please login to control your devices</p>
+    </div>
+
+    <div id="loginForm">
+      <div class="input-group">
+        <input type="email" id="email" placeholder="Enter Email" required autocomplete="email" />
+        <i class="fas fa-envelope"></i>
+      </div>
+      <div class="input-group">
+        <input type="password" id="password" placeholder="Enter Password" required autocomplete="current-password" />
+        <i class="fas fa-lock"></i>
+      </div>
+      <button id="loginBtn">
+        <span><i class="fas fa-sign-in-alt"></i> Login</span>
+      </button>
+      <p id="errorMessage"></p>
+    </div>
+
+    <div class="footer">
+      <p><i class="fas fa-shield-alt"></i> Secure Home Automation System</p>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBwhAl9D7crGS_0vS1qhh4INrMEvXp0Wlk",
+      authDomain: "tarp-aura.firebaseapp.com",
+      databaseURL: "https://tarp-aura-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "tarp-aura",
+      storageBucket: "tarp-aura.firebasestorage.app",
+      messagingSenderId: "525320492710",
+      appId: "1:525320492710:web:0736e24d7f0bb120af8667",
+      measurementId: "G-PXNNLECPF2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    // Predefined login credentials (can be replaced with your logic)
+    const allowedEmail = "abc@gmail.com";
+    const allowedPassword = "123456";
+
+    // Check if user is already logged in
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in, redirect to dashboard
+        window.location.href = "dashboard.html";
+      }
+    });
+
+    const loginForm = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
+    const errorMessage = document.getElementById("errorMessage");
+
+    loginBtn.addEventListener("click", () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        showError("Please enter email and password.");
+        return;
+      }
+
+      // Disable button and show loading
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin"></i> Logging in...</span>';
+
+      // Check hardcoded credentials first
+      if(email === allowedEmail && password === allowedPassword){
+        // Try to sign in with Firebase
+        firebase.auth().signInWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            console.log("Signed in as", userCredential.user.email);
+            // Redirect to dashboard page
+            window.location.href = "dashboard.html";
+          })
+          .catch(error => {
+            // If user doesn't exist, create the user first
+            if (error.code === 'auth/user-not-found') {
+              firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                  console.log("User created and signed in as", userCredential.user.email);
+                  window.location.href = "dashboard.html";
+                })
+                .catch(createError => {
+                  showError("Failed to create user: " + createError.message);
+                  resetButton();
+                });
+            } else if (error.code === 'auth/wrong-password') {
+              showError("Invalid password. Please check your credentials.");
+              resetButton();
+            } else {
+              showError("Login failed: " + error.message);
+              resetButton();
+            }
+          });
+      } else {
+        showError("Invalid email or password.");
+        resetButton();
+      }
+    });
+
+    function resetButton() {
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = '<span><i class="fas fa-sign-in-alt"></i> Login</span>';
+    }
+
+    // Allow Enter key to submit
+    document.getElementById("password").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        loginBtn.click();
+      }
+    });
+
+    document.getElementById("email").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("password").focus();
+      }
+    });
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = "block";
+      setTimeout(() => {
+        errorMessage.style.display = "none";
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

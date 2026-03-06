@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Home Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: 
+        linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2)),
+        url('blue-wall-empty-room-with-wooden-floor.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      padding: 20px 10px 40px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+    .header h1 {
+      margin: 20px 0 10px;
+      font-size: 2.5rem;
+      color: #ffffff;
+      font-weight: 700;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+    .header h1 i {
+      color: #f39c12;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .user-info {
+      text-align: center;
+      color: #ffffff;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.25);
+      padding: 10px 20px;
+      border-radius: 25px;
+      display: inline-block;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      position: relative;
+      z-index: 1;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .controls-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      padding: 0 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .control-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      padding: 20px 18px;
+      box-shadow: 
+        0 10px 30px rgba(0,0,0,0.3),
+        0 1px 8px rgba(0,0,0,0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .control-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #f39c12, #e74c3c, #3498db, #2ecc71);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    .control-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 
+        0 15px 40px rgba(0,0,0,0.15),
+        0 5px 15px rgba(0,0,0,0.1);
+    }
+    .control-card:hover::before {
+      transform: scaleX(1);
+    }
+    .control-card.active {
+      background: rgba(255, 249, 230, 0.98);
+      box-shadow: 
+        0 10px 30px rgba(243, 156, 18, 0.5),
+        0 1px 8px rgba(243, 156, 18, 0.3),
+        0 0 30px rgba(243, 156, 18, 0.2);
+      border: 1px solid rgba(243, 156, 18, 0.4);
+    }
+    .control-card.active::before {
+      transform: scaleX(1);
+    }
+    .device-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      display: block;
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+    .control-card.active .device-icon {
+      animation: glow 2s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(243, 156, 18, 0.6));
+    }
+    @keyframes glow {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .device-icon.led { color: #f1c40f; }
+    .device-icon.relay { color: #3498db; }
+    .device-icon.ulsc { color: #9b59b6; }
+    .control-card.active .device-icon.led { color: #f39c12; }
+    .control-card.active .device-icon.relay { color: #2980b9; }
+    .control-card.active .device-icon.ulsc { color: #8e44ad; }
+    .control-card h2 {
+      margin: 0 0 18px 0;
+      font-size: 1.2rem;
+      color: #2c3e50;
+      text-align: center;
+      font-weight: 600;
+    }
+    .switch-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    .switch-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 90px;
+      height: 45px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 45px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 37px;
+      width: 37px;
+      left: 4px;
+      bottom: 4px;
+      background: linear-gradient(145deg, #ffffff, #e0e0e0);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+      box-shadow: 
+        0 3px 6px rgba(0,0,0,0.3),
+        0 1px 2px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider {
+      background: linear-gradient(135deg, #4caf50, #45a049);
+      box-shadow: 
+        inset 0 2px 4px rgba(0,0,0,0.2),
+        0 0 20px rgba(76, 175, 80, 0.4);
+    }
+    input:checked + .slider:before {
+      transform: translateX(45px);
+      background: linear-gradient(145deg, #ffffff, #f5f5f5);
+      box-shadow: 
+        0 4px 8px rgba(0,0,0,0.3),
+        0 0 15px rgba(255, 255, 255, 0.5);
+    }
+    input:disabled + .slider {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .status-text {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 8px;
+      padding: 6px 16px;
+      border-radius: 18px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+    .status-text.on {
+      color: #2ecc71;
+      background: rgba(46, 204, 113, 0.1);
+      box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+    }
+    .status-text.off {
+      color: #95a5a6;
+      background: rgba(149, 165, 166, 0.1);
+    }
+    .ulsc-value-display {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #8e44ad;
+      text-align: center;
+      min-width: 90px;
+      transition: all 0.3s ease;
+      text-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);
+    }
+    .control-card.active .ulsc-value-display {
+      color: #9b59b6;
+      text-shadow: 0 0 20px rgba(155, 89, 182, 0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .dial-container {
+      width: 90px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .dial-base {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #e0e0e0, #f5f5f5);
+      box-shadow: 
+        inset 0 2px 4px rgba(0,0,0,0.1),
+        0 4px 8px rgba(0,0,0,0.2);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dial-scale {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    .dial-mark {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      width: 2px;
+      height: 8px;
+      background: #7f8c8d;
+      transform-origin: 50% 40px;
+      border-radius: 1px;
+    }
+    .dial-knob {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffffff, #e0e0e0);
+      box-shadow: 
+        0 4px 8px rgba(0,0,0,0.3),
+        inset 0 1px 2px rgba(255,255,255,0.8);
+      position: relative;
+      cursor: grab;
+      transition: transform 0.1s ease-out;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dial-knob:active {
+      cursor: grabbing;
+    }
+    .dial-pointer {
+      width: 3px;
+      height: 20px;
+      background: linear-gradient(180deg, #3498db, #2980b9);
+      border-radius: 2px;
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .control-card.active .dial-knob {
+      background: linear-gradient(145deg, #fff9e6, #ffe6cc);
+      box-shadow: 
+        0 4px 8px rgba(243, 156, 18, 0.4),
+        inset 0 1px 2px rgba(255,255,255,0.8);
+    }
+    .control-card.active .dial-pointer {
+      background: linear-gradient(180deg, #f39c12, #e67e22);
+      box-shadow: 0 2px 4px rgba(243, 156, 18, 0.5);
+    }
+    .action-buttons {
+      max-width: 1400px;
+      margin: 40px auto 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 0 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .action-btn {
+      padding: 15px 35px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      color: white;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    .action-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .action-btn:active {
+      transform: translateY(0);
+    }
+    .action-btn span {
+      position: relative;
+      z-index: 1;
+    }
+    #allOffBtn {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
+    #logoutBtn {
+      background: linear-gradient(135deg, #7f8c8d, #5d6d7e);
+    }
+    .sensors-container {
+      max-width: 1400px;
+      margin: 0 auto 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 0 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .sensor-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      padding: 25px 20px;
+      box-shadow: 
+        0 10px 30px rgba(0,0,0,0.3),
+        0 1px 8px rgba(0,0,0,0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .sensor-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 
+        0 15px 40px rgba(0,0,0,0.15),
+        0 5px 15px rgba(0,0,0,0.1);
+    }
+    .sensor-icon-wrapper {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .sensor-icon-wrapper.temperature {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+    .sensor-icon-wrapper.humidity {
+      background: linear-gradient(135deg, #4ecdc4, #44a3a0);
+      box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+    }
+    .sensor-icon {
+      font-size: 2rem;
+      color: white;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    .sensor-info {
+      flex: 1;
+    }
+    .sensor-label {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-bottom: 5px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sensor-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin: 0;
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+    }
+    .sensor-unit {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #95a5a6;
+    }
+    .sensor-status {
+      font-size: 0.75rem;
+      color: #7f8c8d;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .sensor-status i {
+      font-size: 0.7rem;
+    }
+    @media (max-width: 700px) {
+      .controls-container {
+        grid-template-columns: 1fr;
+      }
+      .sensors-container {
+        grid-template-columns: 1fr;
+      }
+      .action-buttons {
+        flex-direction: column;
+      }
+      .action-btn {
+        width: 100%;
+        max-width: 300px;
+      }
+      .header h1 {
+        font-size: 1.8rem;
+      }
+      .device-icon {
+        font-size: 3rem;
+      }
+      .sensor-value {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>
+      <i class="fas fa-home"></i>
+      Smart Home Control
+    </h1>
+    <div class="user-info" id="userInfo">
+      <i class="fas fa-user-circle"></i> Loading...
+    </div>
+  </div>
+
+  <div class="sensors-container">
+    <!-- Temperature Display -->
+    <div class="sensor-card">
+      <div class="sensor-icon-wrapper temperature">
+        <i class="fas fa-thermometer-half sensor-icon"></i>
+      </div>
+      <div class="sensor-info">
+        <div class="sensor-label">Temperature</div>
+        <div class="sensor-value">
+          <span id="temperatureValue">--</span>
+          <span class="sensor-unit">°C</span>
+        </div>
+        <div class="sensor-status">
+          <i class="fas fa-circle"></i>
+          <span id="temperatureStatus">Reading...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Humidity Display -->
+    <div class="sensor-card">
+      <div class="sensor-icon-wrapper humidity">
+        <i class="fas fa-tint sensor-icon"></i>
+      </div>
+      <div class="sensor-info">
+        <div class="sensor-label">Humidity</div>
+        <div class="sensor-value">
+          <span id="humidityValue">--</span>
+          <span class="sensor-unit">%</span>
+        </div>
+        <div class="sensor-status">
+          <i class="fas fa-circle"></i>
+          <span id="humidityStatus">Reading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-container">
+    <!-- LED Control -->
+    <div class="control-card" id="ledCard">
+      <i class="fas fa-lightbulb device-icon led"></i>
+      <h2>LED Light</h2>
+      <div class="switch-container">
+        <div class="switch-wrapper">
+          <label class="switch">
+            <input type="checkbox" id="ledSwitch">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="status-text off" id="ledStatus">OFF</div>
+      </div>
+    </div>
+
+    <!-- Relay 1 -->
+    <div class="control-card" id="relay1Card">
+      <i class="fas fa-plug device-icon relay"></i>
+      <h2>Relay 1</h2>
+      <div class="switch-container">
+        <div class="switch-wrapper">
+          <label class="switch">
+            <input type="checkbox" id="relay1Switch">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="status-text off" id="relay1Status">OFF</div>
+      </div>
+    </div>
+
+    <!-- Relay 2 -->
+    <div class="control-card" id="relay2Card">
+      <i class="fas fa-plug device-icon relay"></i>
+      <h2>Relay 2</h2>
+      <div class="switch-container">
+        <div class="switch-wrapper">
+          <label class="switch">
+            <input type="checkbox" id="relay2Switch">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="status-text off" id="relay2Status">OFF</div>
+      </div>
+    </div>
+
+    <!-- Relay 3 -->
+    <div class="control-card" id="relay3Card">
+      <i class="fas fa-plug device-icon relay"></i>
+      <h2>Relay 3</h2>
+      <div class="switch-container">
+        <div class="switch-wrapper">
+          <div class="dial-container" id="relay3DialContainer">
+            <div class="dial-base">
+              <div class="dial-scale">
+                <div class="dial-mark" style="transform: rotate(-90deg);"></div>
+                <div class="dial-mark" style="transform: rotate(-45deg);"></div>
+                <div class="dial-mark" style="transform: rotate(0deg);"></div>
+                <div class="dial-mark" style="transform: rotate(45deg);"></div>
+                <div class="dial-mark" style="transform: rotate(90deg);"></div>
+              </div>
+              <div class="dial-knob" id="relay3Dial">
+                <div class="dial-pointer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="status-text off" id="relay3Status">0%</div>
+      </div>
+    </div>
+
+    <!-- Relay 4 -->
+    <div class="control-card" id="relay4Card">
+      <i class="fas fa-plug device-icon relay"></i>
+      <h2>Relay 4</h2>
+      <div class="switch-container">
+        <div class="switch-wrapper">
+          <label class="switch">
+            <input type="checkbox" id="relay4Switch">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="status-text off" id="relay4Status">OFF</div>
+      </div>
+    </div>
+
+    <!-- ULSC Display -->
+    <div class="control-card" id="ulscCard">
+      <i class="fas fa-microchip device-icon ulsc"></i>
+      <h2>ULSC</h2>
+      <div class="switch-container">
+        <div class="switch-wrapper">
+          <div class="ulsc-value-display" id="ulscValue">--</div>
+        </div>
+        <div class="status-text off" id="ulscStatus">Reading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="action-btn" id="allOffBtn">
+      <span><i class="fas fa-power-off"></i> All OFF</span>
+    </button>
+    <button class="action-btn" id="logoutBtn">
+      <span><i class="fas fa-sign-out-alt"></i> Logout</span>
+    </button>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBwhAl9D7crGS_0vS1qhh4INrMEvXp0Wlk",
+      authDomain: "tarp-aura.firebaseapp.com",
+      databaseURL: "https://tarp-aura-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "tarp-aura",
+      storageBucket: "tarp-aura.firebasestorage.app",
+      messagingSenderId: "525320492710",
+      appId: "1:525320492710:web:0736e24d7f0bb120af8667",
+      measurementId: "G-PXNNLECPF2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Check authentication
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) {
+        // User is not logged in, redirect to login page
+        window.location.href = "index.html";
+      } else {
+        // User is logged in, show user info
+        document.getElementById("userInfo").innerHTML = `<i class="fas fa-user-circle"></i> ${user.email}`;
+        initializeControls();
+        initializeSensors();
+      }
+    });
+
+    function initializeSensors() {
+      // Temperature sensor
+      const tempRef = db.ref("/temperature");
+      tempRef.on("value", (snapshot) => {
+        const temp = snapshot.val();
+        if (temp !== null && temp !== undefined) {
+          const tempValue = parseFloat(temp).toFixed(1);
+          document.getElementById("temperatureValue").textContent = tempValue;
+          
+          // Update status based on temperature
+          let status = "Normal";
+          let statusColor = "#2ecc71";
+          if (temp < 15) {
+            status = "Cold";
+            statusColor = "#3498db";
+          } else if (temp > 30) {
+            status = "Hot";
+            statusColor = "#e74c3c";
+          }
+          
+          const statusElement = document.getElementById("temperatureStatus");
+          statusElement.textContent = status;
+          statusElement.style.color = statusColor;
+          statusElement.querySelector("i").style.color = statusColor;
+        } else {
+          document.getElementById("temperatureValue").textContent = "--";
+          document.getElementById("temperatureStatus").textContent = "No data";
+        }
+      });
+
+      // Humidity sensor
+      const humidityRef = db.ref("/humidity");
+      humidityRef.on("value", (snapshot) => {
+        const humidity = snapshot.val();
+        if (humidity !== null && humidity !== undefined) {
+          const humidityValue = parseFloat(humidity).toFixed(1);
+          document.getElementById("humidityValue").textContent = humidityValue;
+          
+          // Update status based on humidity
+          let status = "Comfortable";
+          let statusColor = "#2ecc71";
+          if (humidity < 30) {
+            status = "Dry";
+            statusColor = "#f39c12";
+          } else if (humidity > 70) {
+            status = "Humid";
+            statusColor = "#3498db";
+          }
+          
+          const statusElement = document.getElementById("humidityStatus");
+          statusElement.textContent = status;
+          statusElement.style.color = statusColor;
+          statusElement.querySelector("i").style.color = statusColor;
+        } else {
+          document.getElementById("humidityValue").textContent = "--";
+          document.getElementById("humidityStatus").textContent = "No data";
+        }
+      });
+    }
+
+    function initializeControls() {
+      // Define all controls with their card IDs (excluding ULSC and Relay 3)
+      const controls = [
+        { id: "led", path: "led", switchId: "ledSwitch", statusId: "ledStatus", cardId: "ledCard" },
+        { id: "relay1", path: "relay1", switchId: "relay1Switch", statusId: "relay1Status", cardId: "relay1Card" },
+        { id: "relay2", path: "relay2", switchId: "relay2Switch", statusId: "relay2Status", cardId: "relay2Card" },
+        { id: "relay4", path: "relay4", switchId: "relay4Switch", statusId: "relay4Status", cardId: "relay4Card" }
+      ];
+
+      // Initialize each control
+      controls.forEach(control => {
+        const switchElement = document.getElementById(control.switchId);
+        const statusElement = document.getElementById(control.statusId);
+        const cardElement = document.getElementById(control.cardId);
+        const controlRef = db.ref("/" + control.path);
+
+        // Listen for changes from Firebase
+        controlRef.on("value", (snapshot) => {
+          const state = snapshot.val() === true || snapshot.val() === 1;
+          switchElement.checked = state;
+          updateStatus(statusElement, state);
+          updateCardState(cardElement, state);
+        });
+
+        // Handle switch toggle
+        switchElement.addEventListener("change", () => {
+          const newState = switchElement.checked;
+          controlRef.set(newState);
+        });
+      });
+
+      // All OFF button (excludes ULSC and Relay 3)
+      document.getElementById("allOffBtn").addEventListener("click", () => {
+        controls.forEach(control => {
+          db.ref("/" + control.path).set(false);
+        });
+        // Reset Relay 3 dial to 0
+        db.ref("/relay3").set(0);
+      });
+
+      // Initialize ULSC as numeric display
+      initializeULSC();
+      
+      // Initialize Relay 3 as dial
+      initializeRelay3Dial();
+    }
+
+    function initializeULSC() {
+      const ulscRef = db.ref("/ulsc");
+      const ulscValueElement = document.getElementById("ulscValue");
+      const ulscStatusElement = document.getElementById("ulscStatus");
+      const ulscCardElement = document.getElementById("ulscCard");
+
+      ulscRef.on("value", (snapshot) => {
+        const value = snapshot.val();
+        if (value !== null && value !== undefined) {
+          // Display numeric value
+          const numericValue = parseFloat(value);
+          if (!isNaN(numericValue)) {
+            ulscValueElement.textContent = numericValue.toFixed(1);
+            ulscStatusElement.textContent = "Active";
+            ulscStatusElement.className = "status-text on";
+            ulscCardElement.classList.add("active");
+          } else {
+            ulscValueElement.textContent = "--";
+            ulscStatusElement.textContent = "No data";
+            ulscStatusElement.className = "status-text off";
+            ulscCardElement.classList.remove("active");
+          }
+        } else {
+          ulscValueElement.textContent = "--";
+          ulscStatusElement.textContent = "No data";
+          ulscStatusElement.className = "status-text off";
+          ulscCardElement.classList.remove("active");
+        }
+      });
+    }
+
+    function initializeRelay3Dial() {
+      const dial = document.getElementById("relay3Dial");
+      const dialContainer = document.getElementById("relay3DialContainer");
+      const statusElement = document.getElementById("relay3Status");
+      const cardElement = document.getElementById("relay3Card");
+      const relay3Ref = db.ref("/relay3");
+      
+      let isDragging = false;
+      let currentRotation = -90; // Start at -90 degrees (0%)
+      let startAngle = 0;
+      let startRotation = 0;
+
+      // Function to update dial position and Firebase
+      function updateDial(rotation) {
+        // Clamp rotation between -90 and 90 degrees (180 degree range)
+        rotation = Math.max(-90, Math.min(90, rotation));
+        currentRotation = rotation;
+        
+        // Convert rotation to percentage (0% to 100%)
+        const percentage = ((rotation + 90) / 180) * 100;
+        
+        // Update visual rotation
+        dial.style.transform = `rotate(${rotation}deg)`;
+        
+        // Update status display
+        statusElement.textContent = Math.round(percentage) + "%";
+        if (percentage > 0) {
+          statusElement.className = "status-text on";
+          cardElement.classList.add("active");
+        } else {
+          statusElement.className = "status-text off";
+          cardElement.classList.remove("active");
+        }
+        
+        // Update Firebase
+        relay3Ref.set(Math.round(percentage));
+      }
+
+      // Function to get angle from center
+      function getAngleFromCenter(e, centerX, centerY) {
+        const rect = dialContainer.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - centerX;
+        const y = (e.clientY || e.touches[0].clientY) - centerY;
+        return Math.atan2(y, x) * (180 / Math.PI);
+      }
+
+      // Mouse events
+      dial.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        const rect = dialContainer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        startAngle = getAngleFromCenter(e, centerX, centerY);
+        startRotation = currentRotation;
+        e.preventDefault();
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        const rect = dialContainer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const currentAngle = getAngleFromCenter(e, centerX, centerY);
+        const angleDiff = currentAngle - startAngle;
+        updateDial(startRotation + angleDiff);
+      });
+
+      document.addEventListener("mouseup", () => {
+        isDragging = false;
+      });
+
+      // Touch events for mobile
+      dial.addEventListener("touchstart", (e) => {
+        isDragging = true;
+        const rect = dialContainer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        startAngle = getAngleFromCenter(e, centerX, centerY);
+        startRotation = currentRotation;
+        e.preventDefault();
+      });
+
+      document.addEventListener("touchmove", (e) => {
+        if (!isDragging) return;
+        const rect = dialContainer.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const currentAngle = getAngleFromCenter(e, centerX, centerY);
+        const angleDiff = currentAngle - startAngle;
+        updateDial(startRotation + angleDiff);
+        e.preventDefault();
+      });
+
+      document.addEventListener("touchend", () => {
+        isDragging = false;
+      });
+
+      // Listen for changes from Firebase
+      relay3Ref.on("value", (snapshot) => {
+        const value = snapshot.val();
+        if (value !== null && value !== undefined) {
+          const percentage = parseFloat(value);
+          if (!isNaN(percentage)) {
+            // Convert percentage to rotation (-90 to 90 degrees)
+            const rotation = (percentage / 100) * 180 - 90;
+            if (!isDragging) {
+              currentRotation = rotation;
+              dial.style.transform = `rotate(${rotation}deg)`;
+              statusElement.textContent = Math.round(percentage) + "%";
+              if (percentage > 0) {
+                statusElement.className = "status-text on";
+                cardElement.classList.add("active");
+              } else {
+                statusElement.className = "status-text off";
+                cardElement.classList.remove("active");
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateStatus(statusElement, isOn) {
+      if (isOn) {
+        statusElement.textContent = "ON";
+        statusElement.className = "status-text on";
+      } else {
+        statusElement.textContent = "OFF";
+        statusElement.className = "status-text off";
+      }
+    }
+
+    function updateCardState(cardElement, isOn) {
+      if (isOn) {
+        cardElement.classList.add("active");
+      } else {
+        cardElement.classList.remove("active");
+      }
+    }
+
+    // Logout functionality
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      firebase.auth().signOut()
+        .then(() => {
+          window.location.href = "index.html";
+        })
+        .catch(error => {
+          alert("Logout failed: " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>
